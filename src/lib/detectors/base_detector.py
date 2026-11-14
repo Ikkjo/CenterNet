@@ -21,7 +21,7 @@ class BaseDetector(object):
       opt.device = torch.device('cpu')
     
     print('Creating model...')
-    self.model = create_model(opt.arch, opt.heads, opt.head_conv)
+    self.model = create_model(opt.arch, opt.heads, opt.head_conv, pretrained=False)
     self.model = load_model(self.model, opt.load_model)
     self.model = self.model.to(opt.device)
     self.model.eval()
@@ -109,13 +109,15 @@ class BaseDetector(object):
         meta = pre_processed_images['meta'][scale]
         meta = {k: v.numpy()[0] for k, v in meta.items()}
       images = images.to(self.opt.device)
-      torch.cuda.synchronize()
+      if self.opt.device.type == "cuda":
+        torch.cuda.synchronize(self.opt.device)
       pre_process_time = time.time()
       pre_time += pre_process_time - scale_start_time
       
       output, dets, forward_time = self.process(images, return_time=True)
 
-      torch.cuda.synchronize()
+      if self.opt.device.type == "cuda":
+        torch.cuda.synchronize(self.opt.device)
       net_time += forward_time - pre_process_time
       decode_time = time.time()
       dec_time += decode_time - forward_time
@@ -124,14 +126,16 @@ class BaseDetector(object):
         self.debug(debugger, images, dets, output, scale)
       
       dets = self.post_process(dets, meta, scale)
-      torch.cuda.synchronize()
+      if self.opt.device.type == "cuda":
+        torch.cuda.synchronize(self.opt.device)
       post_process_time = time.time()
       post_time += post_process_time - decode_time
 
       detections.append(dets)
     
     results = self.merge_outputs(detections)
-    torch.cuda.synchronize()
+    if self.opt.device.type == "cuda":
+      torch.cuda.synchronize(self.opt.device)
     end_time = time.time()
     merge_time += end_time - post_process_time
     tot_time += end_time - start_time

@@ -1,0 +1,9 @@
+name: Python port
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v10
+      - run: ./scripts/check_port.sh -q
