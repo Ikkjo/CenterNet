@@ -70,7 +70,8 @@ guide suggested.
 
 The checks cover DCN numerics and gradients on CPU and CUDA when available,
 ResNet/ResNet-DCN/DLA/DLAv0 loss/backward/optimizer/checkpoint resume, hourglass
-forward, all four detector tasks on CPU and CUDA, native NMS, Numba, and a
+forward, all four detector tasks on CPU and CUDA, all four task losses with
+backward/optimizer steps, native NMS, Numba, and a
 synthetic COCO data-loader worker plus a DLA training iteration. CPU CI runs the
 same suite with CUDA cases omitted. Tests use small generated inputs; they do
 not establish full COCO/KITTI accuracy or reproduce paper training results.

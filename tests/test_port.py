@@ -146,3 +146,44 @@ def test_native_nms_and_numba_oracle():
     features = np.array([[[2., 3.]]], dtype=np.float32)
     result = gen_oracle_map(features, np.array([[5]], dtype=np.int64), 4, 4)
     np.testing.assert_equal(result[0, :, 1, 1], [2., 3.])
+
+
+@pytest.mark.parametrize('task', ['multi_pose', 'ddd', 'exdet'])
+def test_task_training_backward(task):
+    from opts import opts
+    from models.model import create_model
+    from trains.train_factory import train_factory
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    opt = opts().init([task, '--arch', 'res_18', '--input_res', '64'])
+    opt.device = device
+    model = create_model('res_18', opt.heads, 16, pretrained=False).to(device)
+    trainer = train_factory[task](opt, model, torch.optim.Adam(model.parameters()))
+    batch = {
+        'input': torch.randn(2, 3, 64, 64, device=device),
+        'reg_mask': torch.ones(2, 1, dtype=torch.uint8, device=device),
+        'ind': torch.zeros(2, 1, dtype=torch.long, device=device),
+    }
+    for head, channels in opt.heads.items():
+        if head.startswith('hm'):
+            batch[head] = torch.zeros(2, channels, 16, 16, device=device)
+            batch[head][:, 0, 0, 0] = 1
+        else:
+            batch[head] = torch.ones(2, 1, channels, device=device)
+    if task == 'multi_pose':
+        batch.update(hps_mask=torch.ones(2, 1, 34, device=device),
+                     hp_mask=torch.ones(2, 1, device=device),
+                     hp_ind=batch['ind'])
+    elif task == 'ddd':
+        batch.update(rot_mask=batch['reg_mask'],
+                     rotbin=torch.ones(2, 1, 2, dtype=torch.long, device=device),
+                     rotres=torch.zeros(2, 1, 2, device=device))
+    else:
+        for part in 'tlbr':
+            batch['ind_' + part] = batch['ind']
+    _, loss, _ = trainer.model_with_loss(batch)
+    assert torch.isfinite(loss)
+    loss.backward()
+    for parameter in model.parameters():
+        if parameter.grad is not None:
+            assert torch.isfinite(parameter.grad).all()
+    trainer.optimizer.step()
