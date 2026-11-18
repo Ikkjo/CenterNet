@@ -28,8 +28,16 @@ _sample_factory = {
 }
 
 
+# Importable classes let spawn/forkserver workers unpickle dataset instances.
+for dataset_name, dataset_class in dataset_factory.items():
+  for task_name, sample_class in _sample_factory.items():
+    name = '{}_{}_Dataset'.format(dataset_name, task_name)
+    globals()[name] = type(name, (dataset_class, sample_class),
+                           {'__module__': __name__})
+
+
 def get_dataset(dataset, task):
-  class Dataset(dataset_factory[dataset], _sample_factory[task]):
-    pass
-  return Dataset
-  
+  # Preserve the factory's KeyError for unknown datasets and tasks.
+  dataset_factory[dataset]
+  _sample_factory[task]
+  return globals()['{}_{}_Dataset'.format(dataset, task)]

@@ -12,6 +12,8 @@ from progress.bar import Bar
 import time
 import torch
 
+from external.nms import soft_nms
+
 from models.decode import exct_decode, agnex_ct_decode
 from models.utils import flip_tensor
 from utils.image import get_affine_transform, transform_preds
@@ -27,14 +29,16 @@ class ExdetDetector(BaseDetector):
 
   def process(self, images, return_time=False):
     with torch.no_grad():
-      torch.cuda.synchronize()
+      if self.opt.device.type == "cuda":
+        torch.cuda.synchronize(self.opt.device)
       output = self.model(images)[-1]
       t_heat = output['hm_t'].sigmoid_()
       l_heat = output['hm_l'].sigmoid_()
       b_heat = output['hm_b'].sigmoid_()
       r_heat = output['hm_r'].sigmoid_()
       c_heat = output['hm_c'].sigmoid_()
-      torch.cuda.synchronize()
+      if self.opt.device.type == "cuda":
+        torch.cuda.synchronize(self.opt.device)
       forward_time = time.time()
       if self.opt.reg_offset:
         dets = self.decode(t_heat, l_heat, b_heat, r_heat, c_heat, 
