@@ -178,7 +178,7 @@ class opts(object):
     # task
     # ctdet
     self.parser.add_argument('--norm_wh', action='store_true',
-                             help='L1(\hat(y) / y, 1) or L1(\hat(y), y)')
+                             help=r'L1(\hat(y) / y, 1) or L1(\hat(y), y)')
     self.parser.add_argument('--dense_wh', action='store_true',
                              help='apply weighted regression near center or '
                                   'just apply regression on center point.')

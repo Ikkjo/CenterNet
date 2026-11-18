@@ -8,6 +8,11 @@ Object detection, 3D detection, and pose estimation using center point detection
 
 Contact: [zhouxy2017@gmail.com](mailto:zhouxy2017@gmail.com). Any questions or discussions are welcomed! 
 
+## Python and PyTorch port
+
+This branch uses uv, Python 3.15.2, PyTorch 2.15.0, and torchvision deformable
+convolution. See [installation and verification](readme/INSTALL.md).
+
 ## Updates
 
  - (June, 2020) We released a state-of-the-art Lidar-based 3D detection and tracking framework [CenterPoint](https://github.com/tianweiy/CenterPoint).

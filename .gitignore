@@ -81,7 +81,6 @@ target/
 .ipynb_checkpoints
 
 # pyenv
-.python-version
 
 # celery beat schedule file
 celerybeat-schedule
@@ -109,3 +108,8 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+.pytest_cache/
+src/lib/external/nms.c
+src/tools/voc_eval_lib/utils/bbox.c
+src/tools/voc_eval_lib/nms/cpu_nms.c
